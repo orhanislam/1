@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini-Make Bridge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        padding: 20px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .header h1 {
+        color: white;
+        font-size: 2.5em;
+        margin-bottom: 10px;
+    }
+
+    .header p {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.2em;
+    }
+
+    .status-bar {
+        background: rgba(0, 0, 0, 0.1);
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #27ae60;
+        animation: pulse 2s infinite;
+    }
+
+    .status-dot.disconnected {
+        background: #e74c3c;
+        animation: none;
+    }
+
+    .status-dot.working {
+        background: #f39c12;
+        animation: pulse 0.5s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+
+    .chat-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        margin: 20px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 25px;
+        overflow-y: auto;
+        background: #f8f9fa;
+    }
+
+    .message {
+        margin: 20px 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .message.user {
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+
+    .message.user .message-avatar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .message.assistant .message-avatar {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+    }
+
+    .message.system .message-avatar {
+        background: #ffeaa7;
+        color: #2d3436;
+    }
+
+    .message-content {
+        background: white;
+        padding: 15px 20px;
+        border-radius: 18px;
+        max-width: 70%;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        line-height: 1.5;
+    }
+
+    .message.user .message-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .message.system .message-content {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        font-style: italic;
+        max-width: 90%;
+    }
+
+    .action-result {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 8px;
+        padding: 12px;
+        margin: 10px 0;
+        font-size: 14px;
+    }
+
+    .action-result.error {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+    }
+
+    .quick-actions {
+        padding: 15px 25px;
+        background: white;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .quick-action {
+        background: rgba(102, 126, 234, 0.1);
+        border: 1px solid #667eea;
+        color: #667eea;
+        padding: 8px 15px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .quick-action:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-1px);
+    }
+
+    .chat-input-area {
+        padding: 25px;
+        background: white;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .input-container {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+    }
+
+    .chat-input {
+        flex: 1;
+        padding: 15px 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        font-size: 16px;
+        outline: none;
+        transition: all 0.3s ease;
+        resize: none;
+        min-height: 50px;
+        max-height: 120px;
+        font-family: inherit;
+    }
+
+    .chat-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .send-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 15px 25px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 50px;
+    }
+
+    .send-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .send-btn:disabled {
+        background: #bdc3c7;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #6c757d;
+        font-style: italic;
+        padding: 10px 0;
+    }
+
+    .typing-dots {
+        display: flex;
+        gap: 4px;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #6c757d;
+        animation: typing 1.4s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-10px); }
+    }
+
+    .scenario-card {
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 15px;
+        margin: 10px 0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .scenario-status {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .scenario-status.active {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .scenario-status.inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .welcome-message {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+    .welcome-message h3 {
+        margin-bottom: 15px;
+        color: #495057;
+    }
+
+    pre {
+        background: #2c3e50;
+        color: #ecf0f1;
+        padding: 15px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 10px 0;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .header h1 { font-size: 2em; }
+        .header p { font-size: 1em; }
+        .chat-container { margin: 10px; }
+        .message-content { max-width: 85%; }
+        .quick-actions { flex-direction: column; }
+        .quick-action { text-align: center; }
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="header">
+        <h1>🤖 Gemini-Make Bridge</h1>
+        <p>AI-powered Make.com scenario builder using Google Gemini</p>
+    </div>
+
+```
+<div class="status-bar">
+    <div class="status-indicator">
+        <div id="statusDot" class="status-dot disconnected"></div>
+        <span id="statusText">Connecting...</span>
+    </div>
+    <div>
+        <span id="scenarioCount">0 scenarios</span>
+    </div>
+</div>
+
+<div class="chat-container">
+    <div class="chat-messages" id="chatMessages">
+        <div class="welcome-message">
+            <h3>👋 Welcome to Gemini-Make Bridge!</h3>
+            <p>Tell me what automation you want to build, and I'll create the complete Make.com scenario for you using Google's most advanced AI.</p>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <div class="quick-action" onclick="sendQuickMessage('Create a PDF generator that accepts title and content')">
+            📄 PDF Generator
+        </div>
+        <div class="quick-action" onclick="sendQuickMessage('Build an email sender using Gmail')">
+            📧 Email Sender
+        </div>
+        <div class="quick-action" onclick="sendQuickMessage('Create a Google Sheets updater')">
+            📊 Sheets Updater
+        </div>
+        <div class="quick-action" onclick="sendQuickMessage('List all my current scenarios')">
+            📋 My Scenarios
+        </div>
+        <div class="quick-action" onclick="sendQuickMessage('Help me choose what to build')">
+            💡 Get Ideas
+        </div>
+    </div>
+
+    <div class="chat-input-area">
+        <div class="input-container">
+            <textarea 
+                id="chatInput" 
+                class="chat-input" 
+                placeholder="Tell me what scenario you want to build..."
+                onkeydown="handleKeyDown(event)"
+            ></textarea>
+            <button id="sendBtn" class="send-btn" onclick="sendMessage()">
+                <span>Send</span>
+                <span>🚀</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let chatHistory = [];
+    let isConnected = false;
+    let isTyping = false;
+
+    // Initialize connection
+    async function initializeConnection() {
+        try {
+            const response = await fetch('/api/test-make');
+            const result = await response.json();
+            
+            if (result.ok) {
+                updateStatus('connected', `Connected to Make.com`);
+                isConnected = true;
+                addSystemMessage('✅ Successfully connected to Make.com! Ready to build scenarios.');
+                
+                // Load existing scenarios
+                await loadScenarios();
+            } else {
+                updateStatus('disconnected', 'Connection failed');
+                addSystemMessage('❌ Failed to connect to Make.com. Please check your configuration.');
+            }
+        } catch (error) {
+            updateStatus('disconnected', 'Connection error');
+            addSystemMessage(`❌ Connection error: ${error.message}`);
+        }
+    }
+
+    async function loadScenarios() {
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: 'List all my scenarios',
+                    history: []
+                })
+            });
+            
+            const result = await response.json();
+            if (result.action && result.action.success
+```
