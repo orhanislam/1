@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Flappy Bird</title>
+  <link rel="preload" as="script" href="./game.js">
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="back" href="/">← Back</a>
+      <div class="hud">
+        <div class="label">Score</div>
+        <div id="score" class="value">0</div>
+      </div>
+      <div class="hud">
+        <div class="label">Best</div>
+        <div id="best" class="value">0</div>
+      </div>
+    </header>
+
+    <canvas id="game" width="360" height="640" aria-label="Flappy Bird canvas" role="img"></canvas>
+
+    <div id="overlay" class="overlay hidden">
+      <div class="panel">
+        <h1>Flappy Bird</h1>
+        <p id="overlayText">Tap or press Space to flap!</p>
+        <button id="startBtn" class="btn primary">Start</button>
+        <button id="restartBtn" class="btn" hidden>Restart</button>
+        <p class="help">Controls: Space / Click / Tap</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="./game.js" defer></script>
+</body>
+</html>
